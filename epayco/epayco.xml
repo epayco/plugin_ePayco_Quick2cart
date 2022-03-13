@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" version="3.0" group="payment" method="upgrade">
+    <name>Payment - epayco</name>
+    <creationDate>14-05-2021</creationDate>
+    <author>ePayco</author>
+    <title>ePayco</title>
+    <authorEmail>roberto.meran@payco.co</authorEmail>
+    <authorUrl>https://epayco.co</authorUrl>
+    <license>http://www.gnu.org/licenses/gpl-3.0.html GNU/GPL</license>
+    <version>1.0.0</version>
+    <description>ePayco</description>
+    <files>
+        <filename plugin="epayco">epayco.php</filename>
+        <folder>epayco</folder>
+    </files>
+    <params>
+        <param name="plugin_name" type="text" default="ePayco" label="PLG_NAME" description="" />
+  		<param type="text" name="epayco_public_key" size="50" label="PUBLIC_KEY" description="Corresponde a la llave de autenticación en el API Rest. Proporcionado en su panel de clientes en la opción configuración" />
+        <param name="p_test_request" type="radio" label="Modo de pruebas" description="Eligir si usar modo de pruebas" >
+		    <option value="1">YES</option>
+			<option value="0">NO</option>
+		</param>
+        <param name="p_external_request" type="radio" label="OnePage Checkout" description="Eligir si usar extandar checkout o one page" >
+		    <option value="1">YES</option>
+			<option value="0">NO</option>
+		</param>
+	</params>
+    <config>
+        <fields name="params">
+            <fieldset name="basic">
+                <field name="plugin_name" type="text" default="ePayco" label="PLG_NAME" description="" />
+                <field type="text" name="epayco_public_key" size="50" label="PUBLIC_KEY" description="Corresponde a la llave de autenticación en el API Rest. Proporcionado en su panel de clientes en la opción configuración" />
+                <field name="p_test_request" type="radio" label="Modo de pruebas" description="Eligir si usar modo de pruebas" >
+                    <option value="1">YES</option>
+					<option value="0">NO</option>
+                </field>
+                <field name="p_external_request" type="radio" label="OnePage Checkout" description="Eligir si usar extandar checkout o one page" >
+                    <option value="1">YES</option>
+					<option value="0">NO</option>
+                </field>
+            </fieldset>
+        </fields>
+    </config>
+</extension>
