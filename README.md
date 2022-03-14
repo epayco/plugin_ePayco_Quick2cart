@@ -32,7 +32,6 @@ plugin de ePayco para Quick2cart
 ## Configuración
 
 1. Configure los siguientes campos:
-
 	* **PLG_NAME**: Nombre a mostrar como metodo de pago.
 	* **PUBLIC_KEY**: LLave publica del usuario.
 	* **Modo de pruebas**: yes(para realizar pruebas) o no (pasar a producción).
