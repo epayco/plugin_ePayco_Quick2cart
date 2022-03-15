@@ -32,10 +32,8 @@ plugin de ePayco para Quick2cart
 ## Configuración
 
 1. Configure los siguientes campos:
-
-	* **P_CUST_ID_CLIENTE**: Numero de usuario.
-	* **P_KEY**: Código asignado por ePayco.
-	* **PUBLIC_KEY**: Numero de usuario.
+	* **PLG_NAME**: Nombre a mostrar como metodo de pago.
+	* **PUBLIC_KEY**: LLave publica del usuario.
 	* **Modo de pruebas**: yes(para realizar pruebas) o no (pasar a producción).
 	* **OnePage Checkout**: yes(Onpage Checkout) o no (Estandar checkout).
 2. Presione el botón **Save & close** que se encuentra en la parte superior derecha para guardar la configuración.
