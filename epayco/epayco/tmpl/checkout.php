@@ -22,6 +22,7 @@ $order_id = substr($order_id_explode[3], 0, strpos($order_id_explode[3], "&proce
             data-epayco-tax="<?php echo sprintf('%02.2f',$vars->tax) ?>"
             data-epayco-tax_base="<?php echo sprintf('%02.2f',$vars->tax_base) ?>"
             data-epayco-name="<?php echo "Order # ".$vars->orderId; ?>"
+            data-epayco-invoice="<?php echo "Order # ".$vars->orderId; ?>"
             data-epayco-description="<?php echo $vars->descripcion;?>"
             data-epayco-currency="<?php echo $vars->currency_code;?>"
             data-epayco-country="co"
@@ -36,8 +37,7 @@ $order_id = substr($order_id_explode[3], 0, strpos($order_id_explode[3], "&proce
             data-epayco-name-billing="<?php echo $vars->user_firstname." ".$vars->user_lastname;?>"
             data-epayco-address-billing="<?php echo $vars->user_address;?>"
             data-epayco-extra1="qucik2cart"
-            data-epayco-extra2="<?php echo $vars->notify_url;?>"
-            data-epayco-extra3="<?php echo $vars->orderId;?>"
+            data-epayco-extra2="<?php echo $vars->orderId;?>"
             >
         </script>
         <script>
