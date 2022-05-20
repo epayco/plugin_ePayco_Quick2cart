@@ -15,7 +15,7 @@ $order_id = substr($order_id_explode[3], 0, strpos($order_id_explode[3], "&proce
 
 <form>    
       <script
-            src="https://epayco-checkout-testing.s3.amazonaws.com/checkout.preprod.js?version=1643645084821"
+            src="https://checkout.epayco.co/checkout.js"
             class="epayco-button"
             data-epayco-key= "<?php echo $vars->publicKey;?>"
             data-epayco-amount="<?php echo sprintf('%02.2f',$vars->amount) ?>"
