@@ -10,7 +10,7 @@
 
 // No direct access
 defined('_JEXEC') or die('Restricted access');
-JHtml::_('script', 'https://checkout.epayco.co/checkout.js');
+JHtml::_('script', 'https://epayco-checkout-testing.s3.amazonaws.com/checkout.preprod.js');
 jimport('joomla.plugin.plugin');
 $lang = JFactory::getLanguage();
 
@@ -54,6 +54,28 @@ class PlgPaymentEpayco extends JPlugin
 		}
 
 		$this->qtcmainHelper = new comquick2cartHelper;
+	}
+
+	public function getIp()
+	{
+		$ipaddress = '';
+		if (isset($_SERVER['HTTP_CLIENT_IP']))
+			$ipaddress = $_SERVER['HTTP_CLIENT_IP'];
+		else if(isset($_SERVER['HTTP_X_FORWARDED_FOR']))
+			$ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
+		else if(isset($_SERVER['HTTP_X_FORWARDED']))
+			$ipaddress = $_SERVER['HTTP_X_FORWARDED'];
+		else if(isset($_SERVER['HTTP_X_CLUSTER_CLIENT_IP']))
+			$ipaddress = $_SERVER['HTTP_X_CLUSTER_CLIENT_IP'];
+		else if(isset($_SERVER['HTTP_FORWARDED_FOR']))
+			$ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
+		else if(isset($_SERVER['HTTP_FORWARDED']))
+			$ipaddress = $_SERVER['HTTP_FORWARDED'];
+		else if(isset($_SERVER['REMOTE_ADDR']))
+			$ipaddress = $_SERVER['REMOTE_ADDR'];
+		else
+			$ipaddress = 'UNKNOWN';
+		return $ipaddress;
 	}
 
 	/**
@@ -152,6 +174,7 @@ class PlgPaymentEpayco extends JPlugin
 		header('Set-Cookie: ' . session_name() . '=' . JFactory::getApplication()->input->cookie->get(session_name()) .
 			'; SameSite=None; Secure; HttpOnly');
 		$vars->publicKey = $this->params->get('epayco_public_key', '');
+		$vars->privateKey = $this->params->get('epayco_private_key', '');
 		$url = $_SERVER['REQUEST_SCHEME']."://".$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
 		$server_name = str_replace('/index.php','/plugins/payment/epayco/epayco/confirmation.php',$url);
         $new_url = $server_name;
@@ -173,6 +196,7 @@ class PlgPaymentEpayco extends JPlugin
 		}
 		$vars->test = $test;
 		$vars->external = $external;
+		$vars->ip = $this->getIp();
 		$html = $this->buildLayout($vars);
 
 		return $html;
