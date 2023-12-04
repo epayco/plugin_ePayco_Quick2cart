@@ -31,6 +31,7 @@ $order_id = substr($order_id_explode[3], 0, strpos($order_id_explode[3], "&proce
                 taxIco: "0".toString(),
                 country: "CO",
                 lang: "es",
+                extra2: "<?php echo $vars->orderId; ?>",
                 external: "<?php echo $vars->external;?>",
                 confirmation: "<?php echo $vars->confirmUrl;?>",
                 response: "<?php echo $vars->return;?>",
