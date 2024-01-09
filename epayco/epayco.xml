@@ -4,7 +4,7 @@
     <creationDate>14-05-2021</creationDate>
     <author>ePayco</author>
     <title>ePayco</title>
-    <authorEmail>roberto.meran@payco.co</authorEmail>
+    <authorEmail>ricardo.saldarriaga@epayco.com</authorEmail>
     <authorUrl>https://epayco.co</authorUrl>
     <license>http://www.gnu.org/licenses/gpl-3.0.html GNU/GPL</license>
     <version>1.0.0</version>
@@ -30,6 +30,7 @@
             <fieldset name="basic">
                 <field name="plugin_name" type="text" default="ePayco" label="PLG_NAME" description="" />
                 <field type="text" name="epayco_public_key" size="50" label="PUBLIC_KEY" description="Corresponde a la llave de autenticación en el API Rest. Proporcionado en su panel de clientes en la opción configuración" />
+                <field type="text" name="epayco_private_key" size="50" label="PRIVATE_KEY" description="Corresponde a la llave de autenticación en el API Rest. Proporcionado en su panel de clientes en la opción configuración" />
                 <field name="p_test_request" type="radio" label="Modo de pruebas" description="Eligir si usar modo de pruebas" >
                     <option value="1">YES</option>
 					<option value="0">NO</option>
