@@ -20,6 +20,13 @@ $order_id = substr($order_id_explode[3], 0, strpos($order_id_explode[3], "&proce
 <form>    
       <script src="https://epayco-checkout-testing.s3.amazonaws.com/checkout.preprod.js"></script>
         <script>
+            var handler = ePayco.checkout.configure({
+                key: "<?php echo $vars->publicKey;?>",
+                test: "<?php echo $vars->test;?>".toString()
+            })
+            var extras_epayco = {
+                extra5:"P33"
+            }
             var data = {
                 name: "<?php echo "Order # ".$vars->orderId; ?>",
                 description: "<?php echo $vars->descripcion;?>",
@@ -81,6 +88,8 @@ $order_id = substr($order_id_explode[3], 0, strpos($order_id_explode[3], "&proce
                                 external: external,
                             });
                             handlerNew.openNew()
+                        }else{
+                            handler.open(data)
                         }
                     })
                     .catch(error => {
