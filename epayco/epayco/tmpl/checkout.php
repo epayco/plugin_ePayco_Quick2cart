@@ -18,7 +18,7 @@ $order_id = substr($order_id_explode[3], 0, strpos($order_id_explode[3], "&proce
     </a>
 </center>
 <form>    
-      <script src="https://epayco-checkout-testing.s3.amazonaws.com/checkout.preprod.js"></script>
+      <script src="https://checkout.epayco.co/checkout.js"></script>
         <script>
             var handler = ePayco.checkout.configure({
                 key: "<?php echo $vars->publicKey;?>",
@@ -70,7 +70,7 @@ $order_id = substr($order_id_explode[3], 0, strpos($order_id_explode[3], "&proce
                 headers["privatekey"] = privatekey;
                 headers["apikey"] = apikey;
                 var payment =   function (){
-                    return  fetch("https://cms.epayco.io/checkout/payment/session", {
+                    return  fetch("https://cms.epayco.co/checkout/payment/session", {
                         method: "POST",
                         body: JSON.stringify(info),
                         headers
