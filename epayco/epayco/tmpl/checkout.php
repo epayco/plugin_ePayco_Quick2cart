@@ -12,35 +12,93 @@ $order_id_explode = explode('=',$vars->notify_url);
 $order_id = substr($order_id_explode[3], 0, strpos($order_id_explode[3], "&processor"));
 
 ?>
-
+ <center>
+    <a id="btn_epayco" href="#">
+        <img src="https://multimedia.epayco.co/epayco-landing/btns/Boton-epayco-color1.png">
+    </a>
+</center>
 <form>    
-      <script
-            src="https://checkout.epayco.co/checkout.js"
-            class="epayco-button"
-            data-epayco-key= "<?php echo $vars->publicKey;?>"
-            data-epayco-amount="<?php echo sprintf('%02.2f',$vars->amount) ?>"
-            data-epayco-tax="<?php echo sprintf('%02.2f',$vars->tax) ?>"
-            data-epayco-tax_base="<?php echo sprintf('%02.2f',$vars->tax_base) ?>"
-            data-epayco-name="<?php echo "Order # ".$vars->orderId; ?>"
-            data-epayco-invoice="<?php echo "Order # ".$vars->orderId; ?>"
-            data-epayco-description="<?php echo $vars->descripcion;?>"
-            data-epayco-currency="<?php echo $vars->currency_code;?>"
-            data-epayco-country="co"
-            data-epayco-test="<?php echo $vars->test;?>"
-            data-epayco-external="<?php echo $vars->external;?>"
-            data-epayco-response="<?php echo $vars->return;?>"
-            data-epayco-confirmation="<?php echo $vars->confirmUrl;?>"
-            data-epayco-autoclick="false"
-            data-epayco-button="https://multimedia.epayco.co/epayco-landing/btns/Boton-epayco-color1.png"
-            data-epayco-rejected="<?php echo $vars->cancel_return;?>"
-            data-epayco-email-billing="<?php echo $vars->user_email;?>"
-            data-epayco-name-billing="<?php echo $vars->user_firstname." ".$vars->user_lastname;?>"
-            data-epayco-address-billing="<?php echo $vars->user_address;?>"
-            data-epayco-extra1="qucik2cart"
-            data-epayco-extra2="<?php echo $vars->orderId;?>"
-            >
-        </script>
+      <script src="https://checkout.epayco.co/checkout.js"></script>
         <script>
+            var handler = ePayco.checkout.configure({
+                key: "<?php echo $vars->publicKey;?>",
+                test: "<?php echo $vars->test;?>".toString()
+            })
+            var extras_epayco = {
+                extra5:"P33"
+            }
+            var data = {
+                name: "<?php echo "Order # ".$vars->orderId; ?>",
+                description: "<?php echo $vars->descripcion;?>",
+                invoice: "<?php echo "Order # ".$vars->orderId; ?>",
+                currency: "<?php echo $vars->currency_code;?>",
+                amount: "<?php echo sprintf('%02.2f',$vars->amount) ?>".toString(),
+                tax_base: "<?php echo sprintf('%02.2f',$vars->tax_base) ?>".toString(),
+                tax: "<?php echo sprintf('%02.2f',$vars->tax) ?>".toString(),
+                taxIco: "0".toString(),
+                country: "CO",
+                lang: "es",
+                extra2: "<?php echo $vars->orderId; ?>",
+                external: "<?php echo $vars->external;?>",
+                confirmation: "<?php echo $vars->confirmUrl;?>",
+                response: "<?php echo $vars->return;?>",
+                name_billing: "<?php echo $vars->user_firstname." ".$vars->user_lastname;?>",
+                address_billing: "",
+                email_billing: "<?php echo $vars->user_email;?>",
+                autoclick: "true",
+                ip: "<?php echo $vars->ip;?>",
+                test: "<?php echo $vars->test;?>".toString()
+            }
+            const apiKey = "<?php echo $vars->publicKey;?>";
+            const privateKey = "<?php echo $vars->privateKey;?>";;
+            var openChekout = function () {
+                    if(localStorage.getItem("invoicePayment") == null){
+                    localStorage.setItem("invoicePayment", data.invoice);
+                        makePayment(privateKey,apiKey,data, data.external == "true"?true:false)
+                    }else{
+                        if(localStorage.getItem("invoicePayment") != data.invoice){
+                            localStorage.removeItem("invoicePayment");
+                            localStorage.setItem("invoicePayment", data.invoice);
+                                makePayment(privateKey,apiKey,data, data.external == "true"?true:false)
+                        }else{
+                            makePayment(privateKey,apiKey,data, data.external == "true"?true:false)
+                        }
+                    }
+            }
+            var makePayment = function (privatekey, apikey, info, external) {
+                const headers = { "Content-Type": "application/json" } ;
+                headers["privatekey"] = privatekey;
+                headers["apikey"] = apikey;
+                var payment =   function (){
+                    return  fetch("https://cms.epayco.co/checkout/payment/session", {
+                        method: "POST",
+                        body: JSON.stringify(info),
+                        headers
+                    })
+                        .then(res =>  res.json())
+                        .catch(err => err);
+                }
+                payment()
+                    .then(session => {
+                        if(session.data.sessionId != undefined){
+                            localStorage.removeItem("sessionPayment");
+                            localStorage.setItem("sessionPayment", session.data.sessionId);
+                            const handlerNew = window.ePayco.checkout.configure({
+                                sessionId: session.data.sessionId,
+                                external: external,
+                            });
+                            handlerNew.openNew()
+                        }else{
+                            handler.open(data)
+                        }
+                    })
+                    .catch(error => {
+                        error.message;
+                    });
+            }
+            var bntPagar = document.getElementById("btn_epayco");
+            bntPagar.addEventListener("click", openChekout);
+            openChekout()
             jQuery(document).ready(function ($){
                 document.addEventListener("contextmenu", function(e){
                     e.preventDefault();
