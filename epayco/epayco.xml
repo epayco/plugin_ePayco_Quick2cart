@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="plugin" version="3.0" group="payment" method="upgrade">
-    <name>Payment - epayco</name>
+    <name>Paga con ePayco</name>
     <creationDate>14-05-2021</creationDate>
     <author>ePayco</author>
     <title>ePayco</title>
     <authorEmail>ricardo.saldarriaga@epayco.com</authorEmail>
     <authorUrl>https://epayco.co</authorUrl>
     <license>http://www.gnu.org/licenses/gpl-3.0.html GNU/GPL</license>
-    <version>1.0.0</version>
-    <description>ePayco</description>
+    <version>3.0.0</version>
+    <description>ePayco: Paga con Tarjeta de crédito/débito nacional e internacional, PSE, Daviplata, Nequi, Paypal, Efectivo, Safetypay y muchos más.</description>
     <files>
         <filename plugin="epayco">epayco.php</filename>
         <folder>epayco</folder>
