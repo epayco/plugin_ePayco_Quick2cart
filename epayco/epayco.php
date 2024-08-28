@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @package     Joomla_Payments
  * @subpackage  plg_payments_epayco
@@ -10,7 +11,7 @@
 
 // No direct access
 defined('_JEXEC') or die('Restricted access');
-JHtml::_('script', 'https://checkout.epayco.co/checkout.js');
+JHtml::_('script', 'https://epayco-checkout-testing.s3.amazonaws.com/checkout.preprod.js');
 jimport('joomla.plugin.plugin');
 $lang = JFactory::getLanguage();
 
@@ -30,7 +31,7 @@ class PlgPaymentEpayco extends JPlugin
 	 *
 	 * @param   string  $config    config
 	 */
-	public function __construct(& $subject, $config)
+	public function __construct(&$subject, $config)
 	{
 		parent::__construct($subject, $config);
 
@@ -43,12 +44,13 @@ class PlgPaymentEpayco extends JPlugin
 			'pending' => 'P',
 			'approved' => 'C',
 			'declined' => 'X',
-			'Refunded' => 'RF', 'ERROR' => 'E');
-		
+			'Refunded' => 'RF',
+			'ERROR' => 'E'
+		);
+
 		$path = JPATH_SITE . '/components/com_quick2cart/helper.php';
 
-		if (!class_exists('comquick2cartHelper'))
-		{
+		if (!class_exists('comquick2cartHelper')) {
 			JLoader::register('comquick2cartHelper', $path);
 			JLoader::load('comquick2cartHelper');
 		}
@@ -61,17 +63,17 @@ class PlgPaymentEpayco extends JPlugin
 		$ipaddress = '';
 		if (isset($_SERVER['HTTP_CLIENT_IP']))
 			$ipaddress = $_SERVER['HTTP_CLIENT_IP'];
-		else if(isset($_SERVER['HTTP_X_FORWARDED_FOR']))
+		else if (isset($_SERVER['HTTP_X_FORWARDED_FOR']))
 			$ipaddress = $_SERVER['HTTP_X_FORWARDED_FOR'];
-		else if(isset($_SERVER['HTTP_X_FORWARDED']))
+		else if (isset($_SERVER['HTTP_X_FORWARDED']))
 			$ipaddress = $_SERVER['HTTP_X_FORWARDED'];
-		else if(isset($_SERVER['HTTP_X_CLUSTER_CLIENT_IP']))
+		else if (isset($_SERVER['HTTP_X_CLUSTER_CLIENT_IP']))
 			$ipaddress = $_SERVER['HTTP_X_CLUSTER_CLIENT_IP'];
-		else if(isset($_SERVER['HTTP_FORWARDED_FOR']))
+		else if (isset($_SERVER['HTTP_FORWARDED_FOR']))
 			$ipaddress = $_SERVER['HTTP_FORWARDED_FOR'];
-		else if(isset($_SERVER['HTTP_FORWARDED']))
+		else if (isset($_SERVER['HTTP_FORWARDED']))
 			$ipaddress = $_SERVER['HTTP_FORWARDED'];
-		else if(isset($_SERVER['REMOTE_ADDR']))
+		else if (isset($_SERVER['REMOTE_ADDR']))
 			$ipaddress = $_SERVER['REMOTE_ADDR'];
 		else
 			$ipaddress = 'UNKNOWN';
@@ -104,7 +106,7 @@ class PlgPaymentEpayco extends JPlugin
 	 *
 	 * @return   string  vars
 	 */
-	public function buildLayout($vars )
+	public function buildLayout($vars)
 	{
 		// Load the layout & push variables
 		ob_start();
@@ -127,8 +129,7 @@ class PlgPaymentEpayco extends JPlugin
 	 */
 	public function onTP_GetInfo($config)
 	{
-		if (!in_array($this->_name, $config))
-		{
+		if (!in_array($this->_name, $config)) {
 			return;
 		}
 
@@ -158,41 +159,40 @@ class PlgPaymentEpayco extends JPlugin
 		$query = "SELECT id FROM #__kart_orders WHERE prefix LIKE '%" . $prefix . "%';";
 		$db->setQuery($query);
 		$orderId = $db->loadResult();
-		
+
 		$orderInfo = $this->qtcmainHelper->getorderinfo($orderId);
 		$tax = 0;
 		$orderItems = $orderInfo['items'];
 		$descripcionParts = array();
-		foreach ($orderItems  as $orderItem)
-		{
+		foreach ($orderItems  as $orderItem) {
 			$tax += floatval($orderItem->item_tax);
 			$descripcionParts[] = $orderItem->order_item_name;
 		}
 		$descripcion = implode(' - ', $descripcionParts);
-		$tax_base = floatval($vars->amount)-$tax;
+		$tax_base = floatval($vars->amount) - $tax;
 		// Fix for sameSite cookie attribute in chrome.
 		header('Set-Cookie: ' . session_name() . '=' . JFactory::getApplication()->input->cookie->get(session_name()) .
 			'; SameSite=None; Secure; HttpOnly');
 		$vars->publicKey = $this->params->get('epayco_public_key', '');
 		$vars->privateKey = $this->params->get('epayco_private_key', '');
-		$url = $_SERVER['REQUEST_SCHEME']."://".$_SERVER['SERVER_NAME'].$_SERVER['REQUEST_URI'];
-		$server_name = str_replace('/index.php','/plugins/payment/epayco/epayco/confirmation.php',$url);
-        $new_url = $server_name;
-        $variable = substr($new_url, 0, strpos($new_url, "confirmation.php"));
-		$vars->confirmUrl = $variable."confirmation.php";
+		$url = $_SERVER['REQUEST_SCHEME'] . "://" . $_SERVER['SERVER_NAME'] . $_SERVER['REQUEST_URI'];
+		$server_name = str_replace('/index.php', '/plugins/payment/epayco/epayco/confirmation.php', $url);
+		$new_url = $server_name;
+		$variable = substr($new_url, 0, strpos($new_url, "confirmation.php"));
+		$vars->confirmUrl = $variable . "confirmation.php";
 		$vars->orderId = $orderId;
 		$vars->tax = $tax;
 		$vars->tax_base = $tax_base;
-		$vars->descripcion=$descripcion;
-		if($this->params->get('p_test_request') == '1'){
-		    $test = "true";
-		}else{
-		    $test = "false";
+		$vars->descripcion = $descripcion;
+		if ($this->params->get('p_test_request') == '1') {
+			$test = "true";
+		} else {
+			$test = "false";
 		}
-		if($this->params->get('p_external_request') == '1'){
-		    $external = "false";
-		}else{
-		    $external = "true";
+		if ($this->params->get('p_external_request') == '1') {
+			$external = "false";
+		} else {
+			$external = "true";
 		}
 		$vars->test = $test;
 		$vars->external = $external;
@@ -244,10 +244,8 @@ class PlgPaymentEpayco extends JPlugin
 	 */
 	public function translateResponse($invoice_status)
 	{
-		foreach ($this->responseStatus as $key => $value)
-		{
-			if ($key == $invoice_status)
-			{
+		foreach ($this->responseStatus as $key => $value) {
+			if ($key == $invoice_status) {
 				return $value;
 			}
 		}
@@ -263,11 +261,10 @@ class PlgPaymentEpayco extends JPlugin
 	 * @return   string  data
 	 */
 	public function onTP_Storelog($data)
-	{	
+	{
 		$log_write = $this->params->get('log_write', '0');
 
-		if ($log_write == 1)
-		{
+		if ($log_write == 1) {
 			$plgPaymentHelper = new PlgPaymentEpaycoHelper;
 			$plgPaymentHelper->Storelog($this->_name, $data);
 		}
