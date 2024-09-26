@@ -11,7 +11,7 @@
 
 // No direct access
 defined('_JEXEC') or die('Restricted access');
-JHtml::_('script', 'https://epayco-checkout-testing.s3.amazonaws.com/checkout.preprod.js');
+JHtml::_('script', 'https://checkout.epayco.co/checkout.js');
 jimport('joomla.plugin.plugin');
 $lang = JFactory::getLanguage();
 
