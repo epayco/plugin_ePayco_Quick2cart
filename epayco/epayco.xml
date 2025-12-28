@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="plugin" version="3.0" group="payment" method="upgrade">
-    <name>Paga con ePayco</name>
+    <name>ePayco</name>
     <creationDate>14-05-2021</creationDate>
     <author>ePayco</author>
     <title>ePayco</title>
