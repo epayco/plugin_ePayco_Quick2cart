@@ -46,32 +46,6 @@ if (!$conn) {
 mysqli_set_charset($conn, "utf8mb4");
 
 /**
- * CREAR ARCHIVO DE DEBUG (se verá en el navegador)
- */
-$debug_file = dirname(dirname(dirname(dirname(__DIR__)))) . '/administrator/logs/confirmation_debug.txt';
-$debug_msg = "\n\n=== CONFIRMATION.PHP EJECUTADO ===\n";
-$debug_msg .= "Timestamp: " . date('Y-m-d H:i:s') . "\n";
-$debug_msg .= "METHOD: " . $_SERVER['REQUEST_METHOD'] . "\n";
-$debug_msg .= "URL: " . $_SERVER['REQUEST_URI'] . "\n";
-$debug_msg .= "GET: " . print_r($_GET, true);
-$debug_msg .= "POST: " . print_r($_POST, true);
-$debug_msg .= "REQUEST: " . print_r($_REQUEST, true);
-$debug_msg .= "Database: " . $basedatos . "\n";
-$debug_msg .= "Prefix: " . $pf . "\n";
-$debug_msg .= "Table to check: " . $pf . "kart_orders\n";
-
-// Verificar que la tabla existe
-$table_check = $conn->query("SHOW TABLES LIKE '" . $pf . "kart_orders'");
-$debug_msg .= "Table exists: " . ($table_check && $table_check->num_rows > 0 ? "YES" : "NO") . "\n";
-
-@file_put_contents($debug_file, $debug_msg, FILE_APPEND | LOCK_EX);
-
-error_log("=== CONFIRMATION.PHP EJECUTADO ===");
-error_log("METHOD: " . $_SERVER['REQUEST_METHOD']);
-error_log("URL: " . $_SERVER['REQUEST_URI']);
-error_log("Table check: " . ($table_check && $table_check->num_rows > 0 ? "YES" : "NO"));
-
-/**
  * RECIBIR DATOS DE EPAYCO
  */
 // Usar $_POST en lugar de $_REQUEST (más seguro)
@@ -153,9 +127,10 @@ if (floatval($x_amount) != $orderAmount) {
 }
 
 // Log de validación (en archivo y Joomla)
-$log_msg = "ePayco Confirmation - Order {$order_id}: " . $validation_message;
-error_log($log_msg);
-logTransaction($order_id, 'VALIDATION', $validation_message, $x_cod_transaction_state);
+if (!$validation) {
+    error_log("ePayco Confirmation - Order {$order_id}: " . $validation_message);
+    logTransaction($order_id, 'VALIDATION', $validation_message, $x_cod_transaction_state);
+}
 
 /**
  * MAPEO DE ESTADOS DE EPAYCO A JOOMLA
@@ -257,9 +232,8 @@ if ($validation) {
         $conn->commit();
         
         // Log de éxito
-        $success_msg = "Order updated to status {$new_status} (ePayco state: {$x_cod_transaction_state})";
-        error_log("ePayco Confirmation - Success: Order {$order_id}: " . $success_msg);
-        logTransaction($order_id, 'SUCCESS', $success_msg, $x_cod_transaction_state);
+        error_log("ePayco Confirmation - Order {$order_id} confirmed (state: {$x_cod_transaction_state})");
+        logTransaction($order_id, 'SUCCESS', "Order status updated to {$new_status}", $x_cod_transaction_state);
         
         // Responder con el código de estado
         http_response_code(200);
