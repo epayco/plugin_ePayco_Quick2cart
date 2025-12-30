@@ -1,5 +1,6 @@
 <?php
-
+//require '../../vendor/autoload.php';
+//use Omnipay\Omnipay;
 /**
  * @package     Joomla_Payments
  * @subpackage  plg_payments_epayco
@@ -8,111 +9,141 @@
  * @copyright   Copyright (C) 2009 - 2018 Techjoomla. All rights reserved.
  * @license     GNU General Public License version 2 or later; see LICEWWWWNSE.txt
  */
-defined('_JEXEC') or die('Restricted access');
-$order_id_explode = explode('=', $vars->notify_url);
-$order_id = substr($order_id_explode[3], 0, strpos($order_id_explode[3], "&processor"));
 
+use Omnipay\Omnipay;
+
+defined('_JEXEC') or die('Restricted access');
+
+try {
+    $__autoload_candidates = [
+        __DIR__ . '/../../vendor/autoload.php',
+        __DIR__ . '/../../../vendor/autoload.php',
+        (defined('JPATH_ROOT') ? JPATH_ROOT . '/vendor/autoload.php' : null),
+        dirname(__DIR__, 5) . '/vendor/autoload.php'
+    ];
+
+    foreach ($__autoload_candidates as $__autoload) {
+        if (!empty($__autoload) && file_exists($__autoload)) {
+            require_once $__autoload;
+            break;
+        }
+    }
+
+    $order_id_explode = explode('=', $vars->notify_url);
+    $order_id = substr($order_id_explode[3], 0, strpos($order_id_explode[3], "&processor"));
+
+    $gateway = Omnipay::create('Epayco');
+    $response = $this->createEpaycoPayment($vars,$gateway);
+
+    if($response === null){
+        echo '<pre style="color:red">No se obtuvo respuesta del gateway. Revisa los logs de PHP y la función createEpaycoPayment.</pre>';
+        return;
+    }else{
+        // Process response
+        if ($response->isRedirect()) {
+            $url = $response->getRedirectUrl();
+            //echo '<pre style="color:green">Respuesta del gateway obtenida correctamente: ' . htmlspecialchars($url) . '</pre>';
+            // Mostrar botón interactivo con logo de Epayco
+            echo '<div style="text-align:center; padding: 40px;">
+                    <p style="font-size: 18px; margin-bottom: 30px;">Cargando métodos de pago...</p>
+                    <a href="' . htmlspecialchars($url) . '" style="display: inline-block; cursor: pointer; transition: transform 0.2s ease;">
+                        <img src="https://multimedia-epayco-preprod.s3.us-east-1.amazonaws.com/plugins-sdks/botonPagarEpayco.png" alt="Epayco" style="height: 30px; width: auto;">
+                    </a>
+                    <p style="font-size: 12px; color: #666; margin-top: 20px;">Si no se cargan automáticamente, de clic en el botón "Pagar con ePayco"</p>
+                  </div>';
+            // El JavaScript manejará la redirección automática sin interferencias
+        } else {
+            // Payment failed
+            echo $response->getMessage();
+        }
+    }
+
+} catch (Exception $e) {
+    echo '<pre style="color:red">Error al crear el gateway Epayco: ' . htmlspecialchars($e->getMessage()) . '</pre>';
+    die();
+    return;
+}
 ?>
-<center>
-    <a id="btn_epayco" href="#">
-        <img src="https://multimedia-epayco.s3.amazonaws.com/plugins-sdks/Boton-color-espanol.png">
-    </a>
-</center>
-<form>
-    <script  src="https://checkout.epayco.co/checkout.js"></script>
-    <script>
-        var handler = ePayco.checkout.configure({
-            key: "<?php echo $vars->publicKey; ?>",
-            test: "<?php echo $vars->test; ?>".toString()
-        })
-        var extras_epayco = {
-            extra5: "P33"
+
+
+<script>
+(function(){
+    const checkoutUrl = <?php echo json_encode($url ?? ''); ?>;
+    const delay = 2000;
+
+    function isValidUrl(u){
+        try { new URL(u); return true; } catch(e){ return false; }
+    }
+
+    function showFallback(url){
+        const div = document.createElement('div');
+        div.style.textAlign = 'center';
+        div.style.margin = '20px';
+        if (url && isValidUrl(url)) {
+            div.innerHTML = '<p>Si no es redirigido automáticamente, haga clic en el siguiente enlace:</p>' +
+                '<a href="' + encodeURI(url) + '" id="epayco-fallback-link" class="btn btn-primary" target="_blank" rel="noopener">Ir al checkout</a>';
+        } else {
+            div.innerHTML = '<p style="color:crimson">No se pudo obtener la URL de checkout. Contacte soporte.</p>';
         }
-        var data = {
-            name: "<?php echo "Order # " . $vars->orderId; ?>",
-            description: "<?php echo $vars->descripcion; ?>",
-            invoice: "<?php echo "Order # " . $vars->orderId; ?>",
-            currency: "<?php echo $vars->currency_code; ?>",
-            amount: "<?php echo sprintf('%02.2f', $vars->amount) ?>".toString(),
-            tax_base: "<?php echo sprintf('%02.2f', $vars->tax_base) ?>".toString(),
-            tax: "<?php echo sprintf('%02.2f', $vars->tax) ?>".toString(),
-            taxIco: "0".toString(),
-            country: "CO",
-            lang: "es",
-            extra2: "<?php echo $vars->orderId; ?>",
-            external: "<?php echo $vars->external; ?>",
-            confirmation: "<?php echo $vars->confirmUrl; ?>",
-            response: "<?php echo $vars->return; ?>",
-            name_billing: "<?php echo $vars->user_firstname . " " . $vars->user_lastname; ?>",
-            address_billing: "",
-            email_billing: "<?php echo $vars->user_email; ?>",
-            autoclick: "true",
-            ip: "<?php echo $vars->ip; ?>",
-            test: "<?php echo $vars->test; ?>".toString()
+        document.body.appendChild(div);
+    }
+
+    function hasNonEmptySessionId(u){
+        try {
+            const parsed = new URL(u);
+            const sessionId = parsed.searchParams.get('sessionId');
+            return sessionId !== null && String(sessionId).trim() !== '';
+        } catch(e){
+            return false;
         }
-        const apiKey = "<?php echo $vars->publicKey; ?>";
-        const privateKey = "<?php echo $vars->privateKey; ?>";;
-        var openChekout = function() {
-            if (localStorage.getItem("invoicePayment") == null) {
-                localStorage.setItem("invoicePayment", data.invoice);
-                makePayment(privateKey, apiKey, data, data.external == "true" ? true : false)
-            } else {
-                if (localStorage.getItem("invoicePayment") != data.invoice) {
-                    localStorage.removeItem("invoicePayment");
-                    localStorage.setItem("invoicePayment", data.invoice);
-                    makePayment(privateKey, apiKey, data, data.external == "true" ? true : false)
-                } else {
-                    makePayment(privateKey, apiKey, data, data.external == "true" ? true : false)
-                }
+    }
+
+    if (!checkoutUrl || !isValidUrl(checkoutUrl)) {
+        console.warn("checkoutUrl inválida:", checkoutUrl);
+        showFallback(checkoutUrl);
+        return;
+    }
+
+    // Validar que la URL contiene parámetro 'sessionId' y no está vacío
+    if (!hasNonEmptySessionId(checkoutUrl)) {
+        console.error("La URL de checkout no contiene el parámetro 'sessionId' válido:", checkoutUrl);
+        showFallback(checkoutUrl);
+        return;
+    }
+
+    console.log("Redirigiendo a checkoutUrl en " + (delay/1000) + "s:", checkoutUrl);
+
+    // Usar replace para no dejar esta página en el historial
+    const timer = setTimeout(() => {
+        try {
+            // Re-validar justo antes de redirigir por seguridad
+            if (!isValidUrl(checkoutUrl) || !hasNonEmptySessionId(checkoutUrl)) {
+                throw new Error("Validación fallida antes de redirigir: sessionId ausente o inválido.");
             }
+            window.location.replace(checkoutUrl);
+        } catch (err) {
+            console.error("Error al redirigir:", err);
+            // fallback: abrir en nueva pestaña y mostrar link en la página
+            window.open(checkoutUrl, '_blank', 'noopener');
+            showFallback(checkoutUrl);
         }
-        var makePayment = function(privatekey, apikey, info, external) {
-            const headers = {
-                "Content-Type": "application/json"
-            };
-            headers["privatekey"] = privatekey;
-            headers["apikey"] = apikey;
-            var payment = function() {
-                return fetch("https://cms.epayco.co/checkout/payment/session", {
-                        method: "POST",
-                        body: JSON.stringify(info),
-                        headers
-                    })
-                    .then(res => res.json())
-                    .catch(err => err);
+    }, delay);
+
+    // Si el usuario interactúa (clic, teclado) redirigir inmediatamente
+    function immediateRedirectHandler(){
+        clearTimeout(timer);
+        try { 
+            if (!isValidUrl(checkoutUrl) || !hasNonEmptySessionId(checkoutUrl)) {
+                throw new Error("Validación fallida al intentar redirección inmediata: sessionId ausente o inválido.");
             }
-            payment()
-                .then(session => {
-                    if (session.data.sessionId != undefined) {
-                        localStorage.removeItem("sessionPayment");
-                        localStorage.setItem("sessionPayment", session.data.sessionId);
-                        const handlerNew = window.ePayco.checkout.configure({
-                            sessionId: session.data.sessionId,
-                            external: external,
-                        });
-                        handlerNew.openNew()
-                    } else {
-                        handler.open(data)
-                    }
-                })
-                .catch(error => {
-                    error.message;
-                });
+            window.location.replace(checkoutUrl); 
+        } catch (e) { 
+            console.error(e);
+            window.open(checkoutUrl, '_blank', 'noopener'); 
+            showFallback(checkoutUrl);
         }
-        var bntPagar = document.getElementById("btn_epayco");
-        bntPagar.addEventListener("click", openChekout);
-        openChekout()
-        jQuery(document).ready(function($) {
-            document.addEventListener("contextmenu", function(e) {
-                e.preventDefault();
-            }, false);
-        })
-        jQuery(document).keydown(function(event) {
-            if (event.keyCode == 123) {
-                return false;
-            } else if (event.ctrlKey && event.shiftKey && event.keyCode == 73) {
-                return false;
-            }
-        });
-    </script>
-</form>
+    }
+    ['click','keydown','touchstart'].forEach(evt => window.addEventListener(evt, immediateRedirectHandler, { once: true }));
+
+})();
+</script>

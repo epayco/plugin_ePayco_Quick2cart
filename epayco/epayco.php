@@ -1,3 +1,4 @@
+
 <?php
 
 /**
@@ -11,9 +12,28 @@
 
 // No direct access
 defined('_JEXEC') or die('Restricted access');
-JHtml::_('script', 'https://checkout.epayco.co/checkout.js');
+//JHtml::_('script', 'https://epayco-checkout-testing.s3.amazonaws.com/checkout.preprod-v2.js');
+// JHtml::_('script', 'https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js');
 jimport('joomla.plugin.plugin');
 $lang = JFactory::getLanguage();
+
+// Cargar vendor/autoload.php (Composer) desde posibles ubicaciones
+$__autoload_candidates = [
+    __DIR__ . '/../../vendor/autoload.php',
+    __DIR__ . '/../../../vendor/autoload.php',
+    (defined('JPATH_ROOT') ? JPATH_ROOT . '/vendor/autoload.php' : null),
+    dirname(__DIR__, 5) . '/vendor/autoload.php'
+];
+
+foreach ($__autoload_candidates as $__autoload) {
+    if (!empty($__autoload) && file_exists($__autoload)) {
+        require_once $__autoload;
+        break;
+    }
+}
+
+use Omnipay\Omnipay;
+
 
 /**
  * PlgPaymentEpayco
@@ -35,8 +55,17 @@ class PlgPaymentEpayco extends JPlugin
 	{
 		parent::__construct($subject, $config);
 
+		// Inicializar la propiedad params correctamente
+		if (isset($config) && isset($config->params)) {
+			$this->params = $config->params;
+		} elseif (isset($this->params)) {
+			// Ya está inicializada
+		} else {
+			$this->params = new stdClass();
+		}
+
 		// Set the language in the class
-		$config = JFactory::getConfig();
+		$configJ = JFactory::getConfig();
 
 		// Define Payment Status codes in Paypal  And Respective Alias in Framework
 		$this->responseStatus = array(
@@ -202,6 +231,8 @@ class PlgPaymentEpayco extends JPlugin
 		return $html;
 	}
 
+
+	
 	/**
 	 * onTP_ProcessSubmit
 	 *
@@ -269,4 +300,58 @@ class PlgPaymentEpayco extends JPlugin
 			$plgPaymentHelper->Storelog($this->_name, $data);
 		}
 	}
+
+
+	/**
+	 * Crea el pago en ePayco usando Omnipay
+	 * @param object $vars
+	 * @param object $gateway
+	 * @return string|null URL de redirección o null en caso de error
+	 */
+	public function createEpaycoPayment($vars, $gateway){
+		try {
+			$publicKey = $this->params->get('epayco_public_key', '');
+			$privateKey = $this->params->get('epayco_private_key', '');
+			$gateway->setUsername('epayco');
+			$gateway->setPkey($publicKey);
+			$gateway->setPrivatekey($privateKey);
+			$gateway->setPublicKey($publicKey);
+			$gateway->setLang('en');
+			$gateway->setTestMode(true);
+			$gateway->setCheckoutMode('onpage');
+			$response = $response = $gateway->purchase(
+				[
+					'amount' => floatval($vars->amount),
+					'subTotal' => floatval($vars->tax_base),
+					'tax' => floatval($vars->tax),
+					'ico' => 0,
+					'currency' => $vars->currency_code,
+					'cancelUrl' => $vars->return,
+					'returnUrl' => $vars->return,
+					'notifyUrl' => $vars->confirmUrl,
+					'transactionId' => $vars->orderId,
+					'description' => $vars->descripcion,
+					'firstName' => $vars->user_firstname,
+					'lastName' => $vars->user_lastname,
+					'email' => $vars->user_email,
+					'address' => $vars->user_address,
+					'country' => $vars->country ?? 'CO',
+					'hasCvv' => true,
+					'extras' => [
+						'extra1' => $vars->orderId,
+					],
+					'extraepayco' =>  "P33"
+					//'epaycopaymentmethoddisable' => [],
+					//'cart' => $cart,
+				]
+			)->send();
+			return $response;
+		} catch (Exception $e) {
+			error_log("Error al crear el gateway Omnipay Epayco: " . $e->getMessage());
+			echo '<pre style="color:red">Error al crear el gateway Omnipay Epayco: ' . htmlspecialchars($e->getMessage()) . '</pre>';
+			die();
+			return;
+		}
+	}
+
 }
